@@ -13,6 +13,7 @@ from typing import Dict
 from typing import List
 
 import pandas as pd
+from sklearn.base import clone
 
 
 
@@ -34,3 +35,45 @@ def various_metrics_binary_classification(model,
         results[label_metric] = result
         
     return results
+
+
+def add_identifier_to_names_pipelines_dict(pipelines: Dict, identifier: str=None):
+
+    if not (isinstance(pipelines, Dict) and any(pipelines)):
+        raise ValueError("First argument should be a non-empty dictionary!")
+
+
+    old_names = list(pipelines.keys()) #(!)otherwise, each key will be changed twice!
+    for old_name in old_names:
+        new_name = f"{old_name}_{identifier}"
+        pipelines[new_name] = pipelines.pop(old_name) #inplace!
+
+
+    return None
+
+
+def insert_steps_to_pipelines_dict(steps: List,
+                                   pipelines: Dict,
+                                   identifier: str = None,
+                                   ):
+
+    if not (isinstance(steps, List) and any(steps)):
+        raise ValueError("First argument should be a non-empty list!")
+    elif not (isinstance(pipelines, Dict) and any(pipelines)):
+        raise ValueError("Second argument should be a non-empty dictionary!")
+
+
+    new_pipelines = {name: clone(pipeline)
+                     for name, pipeline in pipelines.items()}
+
+    reverse_steps = steps.copy()
+    reverse_steps.reverse() #remember, list.reverse() is inplace!
+    for step, new_pipeline in product(reverse_steps, new_pipelines.values()):
+        new_pipeline.steps.insert(0, step)
+
+
+    if identifier:
+        add_identifier_to_names_pipelines_dict(new_pipelines, identifier) #this step is inplace
+
+
+    return new_pipelines
