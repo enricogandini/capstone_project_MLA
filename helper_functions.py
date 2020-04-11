@@ -11,6 +11,7 @@
 
 from typing import Dict
 from typing import List
+from itertools import product
 
 import pandas as pd
 from sklearn.base import clone
